@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Tutorial Videos</title>
+    <style>
+        /* Basic styling for tabs */
+        .tab {
+            display: flex;
+            cursor: pointer;
+            padding: 10px;
+            background-color: #f1f1f1;
+        }
+        .tab.active {
+            background-color: #ddd;
+        }
+        .content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin-top: -1px;
+        }
+        .content.active {
+            display: block;
+        }
+        .video {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="tabs">
+        <div class="tab active" onclick="showContent(1)">Level 1</div>
+        <div class="tab" onclick="showContent(2)">Level 2</div>
+        <div class="tab" onclick="showContent(3)">Level 3</div>
+    </div>
+    
+    <div class="content active" id="content-1"></div>
+    <div class="content" id="content-2"></div>
+    <div class="content" id="content-3"></div>
+    
+    <script>
+        async function fetchVideos(level) {
+            try {
+                let response = await fetch(`https://parsichess.pockethost.io/collections/videos/records?filter=%7B%22level%22%3A%22${level}%22%7D`);
+                let data = await response.json();
+                return data.items;
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                return [];
+            }
+        }
+
+        async function populateContent(level) {
+            const contentDiv = document.getElementById(`content-${level}`);
+            const videos = await fetchVideos(level);
+
+            videos.forEach(video => {
+                const videoDiv = document.createElement('div');
+                videoDiv.classList.add('video');
+
+                const videoTitle = document.createElement('h3');
+                videoTitle.textContent = video.title;
+
+                const videoElement = document.createElement('video');
+                videoElement.controls = true;
+                videoElement.width = 300;
+
+                const sourceElement = document.createElement('source');
+                sourceElement.src = video.url;
+                sourceElement.type = 'video/mp4';
+
+                videoElement.appendChild(sourceElement);
+                videoDiv.appendChild(videoTitle);
+                videoDiv.appendChild(videoElement);
+
+                contentDiv.appendChild(videoDiv);
+            });
+        }
+
+        function showContent(level) {
+            document.querySelectorAll('.content').forEach(content => content.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+
+            document.getElementById(`content-${level}`).classList.add('active');
+            document.querySelector(`.tab:nth-child(${level})`).classList.add('active');
+
+            populateContent(level);
+        }
+    </script>
+</body>
+</html>
