@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parsichess || پارسی چس</title>
+  <link rel="stylesheet" href="../css/output.css">
+</head>
+
+<body class="bg-background">
+  <nav class="flex justify-between items-center p-4 bg-background text-text relative m-5">
+    <!-- Logo -->
+    <div class="logo">
+      <a href="../landing.html" class="text-5xl font-bold">ParsiChess</a>
+    </div>
+
+    <!-- Hamburger Icon -->
+    <button id="burger-menu" class="block md:hidden focus:outline-none" aria-label="Toggle menu">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
+      </svg>
+    </button>
+
+    <!-- Links -->
+    <div id="nav-links"
+      class="hidden md:flex flex-col md:flex-row gap-4 md:gap-20 items-center absolute right-4 top-14 md:static md:translate-x-0 bg-background md:bg-transparent p-4 md:p-0 z-10 shadow-lg md:shadow-none rounded-md md:rounded-none md:gap-20">
+      <a href="../play/index.html" class="py-2 hover:text-gray-300">بازی</a>
+      <a href="../training/lessons/index.html" class="py-2 hover:text-gray-300">آموزش ها</a>
+      <a href="../training/puzzle/index.html" class="py-2 hover:text-gray-300">پازل ها</a>
+      <button class="py-2 bg-primary text-text rounded-md px-4 hover:bg-secondary transition">
+        ورود / ثبت نام
+      </button>
+    </div>
+  </nav>
+  <section class="text-text text-center text-3xl mx-56 mb-56">
+    <h2 class="text-5xl">درباره ما</h2>
+    <p>
+      ما، پارسا و مهدی، دو دوست علاقه‌مند به شطرنج هستیم که از پلتفرم‌های شطرنج معروفی همچون چس دات کام و لی چس الهام
+      گرفتیم. هدف ما این بود که وب‌سایتی بسازیم که تجربه‌ای حرفه‌ای و لذت‌بخش از بازی شطرنج را برای کاربران فارسی‌زبان
+      فراهم کند.
+    </p>
+    <p>
+      وب‌سایت "پارسی‌چس" با عشق به شطرنج و تمرکز بر جامعه فارسی‌زبان طراحی شده است. امکاناتی مانند بازی آنلاین،
+      آموزش‌های شطرنج و چالش‌های روزانه را برای کاربران خود فراهم کرده‌ایم.
+    </p>
+    <p>
+      ما امیدواریم که "پارسی‌چس" به محلی تبدیل شود که بازیکنان مبتدی و حرفه‌ای بتوانند یاد بگیرند، پیشرفت کنند و از بازی
+      شطرنج لذت ببرند.
+    </p>
+  </section>
+
+  <section class="members flex flex-row justify-center gap-20">
+    <div class="text-center text-gray-500 dark:text-gray-400 hover:scale-110 transition">
+      <img class="mx-auto mb-4 w-36 h-36 rounded-full" src="../img/ParsaProfile.jfif" alt="Bonnie Avatar">
+      <h3 class="mb-1 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+        <a href="#">پارسا باطانی</a>
+      </h3>
+      <p>برنامه نویس</p>
+
+    </div>
+    <div class="text-center text-gray-500 dark:text-gray-400 hover:scale-110 transition">
+      <img class="mx-auto mb-4 w-36 h-36 rounded-full" src="../img/FarsiProfile.jpg" alt="Bonnie Avatar">
+      <h3 class="mb-1 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+        <a href="#">محمد مهدی فارسی</a>
+      </h3>
+      <p>بازیکن شطرنج حرفه ای</p>
+
+    </div>
+  </section>
+
+  <footer class="bg-background rounded-lg shadow m-4 dark:bg-background text-text snap-end">
+    <div class="w-full mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
+      <span class="text-sm  sm:text-center ">© 2025 <a href="landing.html" class="hover:underline">ParsiChess</a>
+      </span>
+      <ul class="flex flex-wrap items-center mt-3 text-sm font-medium   sm:mt-0">
+        <li>
+          <a href="../AboutUs/index.html" class="hover:underline me-4 md:me-6">درباره ما</a>
+        </li>
+        <li>
+          <a href="../training/puzzle/index.html" class="hover:underline me-4 md:me-6">پازل</a>
+        </li>
+        <li>
+          <a href="../play/index.html" class="hover:underline me-4 md:me-6">بازی</a>
+        </li>
+        <li>
+          <a href="../training/lessons/index.html" class="hover:underline">آموزش ها</a>
+        </li>
+      </ul>
+    </div>
+  </footer>
+
+  <script>
+    const burgerMenu = document.getElementById('burger-menu');
+    const navLinks = document.getElementById('nav-links');
+
+    burgerMenu.addEventListener('click', () => {
+      navLinks.classList.toggle('hidden');
+    });
+  </script>
+
+</html>

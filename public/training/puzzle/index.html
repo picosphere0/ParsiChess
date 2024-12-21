@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پازل ها || پارسی چس</title>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/lucide-static@0.321.0/font/lucide.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/pocketbase@0.21.1/dist/pocketbase.umd.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <style>
+        .chess-board .piece-417db {
+            background-image: url('https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/img/chesspieces/wikipedia/{piece}.png');
+        }
+    </style>
+    <link rel="stylesheet" href="../../css/output.css">
+</head>
+<body class="min-h-screen bg-background text-text p-4">
+    <nav class="flex justify-between items-center p-4 bg-background text-text relative m-5">
+        <!-- Logo -->
+        <div class="logo">
+          <a href="landing.html" class="text-5xl font-bold">ParsiChess</a>
+        </div>
+    
+        <!-- Hamburger Icon -->
+        <button id="burger-menu" class="block md:hidden focus:outline-none" aria-label="Toggle menu">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
+        </button>
+    
+        <!-- Links -->
+        <div id="nav-links"
+          class="hidden md:flex flex-col md:flex-row gap-4 md:gap-20 items-center absolute right-4 top-14 md:static md:translate-x-0 bg-background md:bg-transparent p-4 md:p-0 z-10 shadow-lg md:shadow-none rounded-md md:rounded-none md:gap-20">
+          <a href="play/index.html" class="py-2 hover:text-gray-300">بازی</a>
+          <a href="training/lessons/index.html" class="py-2 hover:text-gray-300">آموزش ها</a>
+          <a href="training/puzzle/index.html" class="py-2 hover:text-gray-300">پازل ها</a>
+          <button class="py-2 bg-primary text-text rounded-md px-4 hover:bg-secondary transition">
+            ورود / ثبت نام
+          </button>
+        </div>
+      </nav>
+
+
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Left Column - Chess Board -->
+            <div class="lg:w-2/3">
+                <div class="bg-secondary p-4 rounded-lg">
+                    <div id="board"></div>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                    <button class="p-2 rounded-lg border border-secondary hover:bg-secondary" id="resetBtn">
+                        <i class="lucide-rotate-ccw h-4 w-4"></i>
+                    </button>
+                    <div class="flex gap-2">
+                        <button class="p-2 rounded-lg border border-secondary hover:bg-secondary" id="prevMove">
+                            <i class="lucide-chevron-left h-4 w-4"></i>
+                        </button>
+                        <button class="p-2 rounded-lg border border-secondary hover:bg-secondary" id="nextMove">
+                            <i class="lucide-chevron-right h-4 w-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Puzzle Info and Controls -->
+            <div class="lg:w-1/3 space-y-6">
+                <div class="bg-secondary p-6 rounded-lg">
+                    <h2 class="text-2xl font-bold mb-4">معمای روزانه</h2>
+                    <p class="text-text/70 mb-4">نوبت سفید</p>
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="text-text/70">حرکت‌ها: <span id="moveCount">0</span></div>
+                        <div class="text-text/70">سختی: ★★☆☆☆</div>
+                    </div>
+                    <button id="checkMove" class="w-full bg-primary hover:bg-primary/80 text-text mb-4 p-2 rounded-lg flex items-center justify-center">
+                        <i class="lucide-lightbulb mr-2 h-4 w-4"></i>
+                        نمایش راه حل
+                    </button>
+                    <button class="w-full border border-secondary hover:bg-secondary text-text/70 p-2 rounded-lg flex items-center justify-center">
+                        <i class="lucide-flag mr-2 h-4 w-4"></i>
+                        گزارش معما
+                    </button>
+                </div>
+
+                <div class="bg-secondary p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4">چطور بود؟</h3>
+                    <div class="flex gap-4">
+                        <button class="flex-1 border border-secondary text-text/70 hover:bg-secondary p-2 rounded-lg flex items-center justify-center">
+                            <i class="lucide-thumbs-up mr-2 h-4 w-4"></i>
+                            آسان
+                        </button>
+                        <button class="flex-1 border border-secondary text-text/70 hover:bg-secondary p-2 rounded-lg flex items-center justify-center">
+                            <i class="lucide-thumbs-down mr-2 h-4 w-4"></i>
+                            سخت
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-secondary p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4">معماهای بعدی</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="nextPuzzle" class="aspect-square border border-secondary text-text/70 hover:bg-secondary p-2 rounded-lg">
+                            معمای ۱
+                        </button>
+                        <button class="aspect-square border border-secondary text-text/70 hover:bg-secondary p-2 rounded-lg">
+                            معمای ۲
+                        </button>
+                        <button class="aspect-square border border-secondary text-text/70 hover:bg-secondary p-2 rounded-lg">
+                            معمای ۳
+                        </button>
+                        <button class="aspect-square border border-secondary text-text/70 hover:bg-secondary p-2 rounded-lg">
+                            معمای ۴
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <footer class="bg-background rounded-lg shadow m-4 dark:bg-background text-text">
+        <div class="w-full mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
+          <span class="text-sm  sm:text-center ">© 2025 <a href="landing.html" class="hover:underline">ParsiChess</a>
+          </span>
+          <ul class="flex flex-wrap items-center mt-3 text-sm font-medium   sm:mt-0">
+            <li>
+              <a href="AboutUs/index.html" class="hover:underline me-4 md:me-6">درباره ما</a>
+            </li>
+            <li>
+              <a href="training/puzzle/index.html" class="hover:underline me-4 md:me-6">پازل</a>
+            </li>
+            <li>
+              <a href="play/index.html" class="hover:underline me-4 md:me-6">بازی</a>
+            </li>
+            <li>
+              <a href="training/lessons/index.html" class="hover:underline">آموزش ها</a>
+            </li>
+          </ul>
+        </div>
+      </footer>
+
+    <script>
+        const pb = new PocketBase('https://parsichess.pockethost.io');
+        let board = null;
+        let game = new Chess();
+        let currentPuzzle = null;
+        let moveCount = 0;
+
+        async function fetchPuzzles() {
+            try {
+                const records = await pb.collection('puzzles').getList(1, 50, {
+                    sort: 'created'
+                });
+                return records.items;
+            } catch (error) {
+                console.error('Error fetching puzzles:', error);
+                return [];
+            }
+        }
+
+        async function loadRandomPuzzle() {
+            const puzzles = await fetchPuzzles();
+            if (puzzles.length === 0) return;
+
+            const randomIndex = Math.floor(Math.random() * puzzles.length);
+            currentPuzzle = puzzles[randomIndex];
+            
+            game.load(currentPuzzle.fen);
+            board.position(currentPuzzle.fen);
+            moveCount = 0;
+            updateMoveCount();
+        }
+
+        function updateMoveCount() {
+            document.getElementById('moveCount').textContent = moveCount;
+        }
+
+        function onDragStart(source, piece) {
+            if (game.game_over()) return false;
+            if (piece.search(/^b/) !== -1) return false;
+        }
+
+        function onDrop(source, target) {
+            const move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (move === null) return 'snapback';
+            
+            moveCount++;
+            updateMoveCount();
+            
+            if (move.san === currentPuzzle.solution) {
+                setTimeout(() => alert('درست! آفرین!'), 250);
+            } else {
+                setTimeout(() => {
+                    alert('اشتباه. دوباره تلاش کنید!');
+                    game.undo();
+                    board.position(game.fen());
+                    moveCount--;
+                    updateMoveCount();
+                }, 250);
+            }
+        }
+
+        function initializeBoard() {
+            const config = {
+                draggable: true,
+                position: 'start',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                orientation: 'white'
+            };
+            
+            board = Chessboard('board', config);
+            loadRandomPuzzle();
+        }
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            game.load(currentPuzzle.fen);
+            board.position(currentPuzzle.fen);
+            moveCount = 0;
+            updateMoveCount();
+        });
+
+        document.getElementById('nextPuzzle').addEventListener('click', loadRandomPuzzle);
+
+        document.getElementById('checkMove').addEventListener('click', () => {
+            alert(`حرکت صحیح: ${currentPuzzle.solution}`);
+        });
+
+        window.addEventListener('load', initializeBoard);
+    </script>
+</body>
+</html>

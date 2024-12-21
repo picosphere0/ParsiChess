@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parsichess || پارسی چس</title>
+    <link rel="stylesheet" href="../css/output.css">
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <style>
+        .chessboard-63f37.white-1e1d7 {
+            background-color: rgb(238, 238, 210);
+        }
+        .chessboard-63f37.black-3c85d {
+            background-color: rgb(118, 150, 86);
+        }
+    </style>
+</head>
+
+<body class="bg-background">
+    <nav class="flex justify-between items-center p-4 bg-background text-text relative m-5">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="../landing.html" class="text-5xl font-bold">ParsiChess</a>
+        </div>
+
+        <!-- Hamburger Icon -->
+        <button id="burger-menu" class="block md:hidden focus:outline-none" aria-label="Toggle menu">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+        </button>
+
+        <!-- Links -->
+        <div id="nav-links"
+            class="hidden md:flex flex-col md:flex-row gap-4 md:gap-20 items-center absolute right-4 top-14 md:static md:translate-x-0 bg-background md:bg-transparent p-4 md:p-0 z-10 shadow-lg md:shadow-none rounded-md md:rounded-none md:gap-20">
+            <a href="../play/index.html" class="py-2 hover:text-gray-300">بازی</a>
+            <a href="../training/lessons/index.html" class="py-2 hover:text-gray-300">آموزش ها</a>
+            <a href="../training/puzzle/index.html" class="py-2 hover:text-gray-300">پازل ها</a>
+            <button class="py-2 bg-primary text-text rounded-md px-4 hover:bg-secondary transition">
+                ورود / ثبت نام
+            </button>
+        </div>
+    </nav>
+
+    <header>
+        <div class="container mx-auto px-4 py-8">
+            <div class="w-[33.33vw] min-w-[300px]">
+                <div id="board" class="rounded-lg overflow-hidden"></div>
+                <div class="flex justify-between mt-4">
+                    <button id="startBtn" class="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition">
+                        شروع مجدد
+                    </button>
+                    <button id="undoBtn" class="bg-primary text-text px-4 py-2 rounded hover:bg-secondary transition">
+                        برگشت حرکت
+                    </button>
+                </div>
+                <div class="flex justify-center mt-4">
+                    <div class="w-64">
+                        <label for="difficulty" class="block text-text text-sm mb-2">سختی بازی: <span id="difficultyValue">5</span></label>
+                        <input type="range" id="difficulty" min="1" max="10" value="5" 
+                               class="w-full h-2 bg-primary rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <footer class="bg-background rounded-lg shadow m-4 dark:bg-background text-text">
+        <div class="w-full mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-between">
+            <span class="text-sm sm:text-center">© 2025 <a href="landing.html" class="hover:underline">ParsiChess</a>
+            </span>
+            <ul class="flex flex-wrap items-center mt-3 text-sm font-medium sm:mt-0">
+                <li>
+                    <a href="../AboutUs/index.html" class="hover:underline me-4 md:me-6">درباره ما</a>
+                </li>
+                <li>
+                    <a href="../training/puzzle/index.html" class="hover:underline me-4 md:me-6">پازل</a>
+                </li>
+                <li>
+                    <a href="../play/index.html" class="hover:underline me-4 md:me-6">بازی</a>
+                </li>
+                <li>
+                    <a href="../training/lessons/index.html" class="hover:underline">آموزش ها</a>
+                </li>
+            </ul>
+        </div>
+    </footer>
+
+    <script>
+        // Burger menu
+        const burgerMenu = document.getElementById('burger-menu');
+        const navLinks = document.getElementById('nav-links');
+
+        burgerMenu.addEventListener('click', () => {
+            navLinks.classList.toggle('hidden');
+        });
+
+        // Chess game initialization
+        var board = null;
+        var game = new Chess();
+        var difficulty = 5;
+
+        // Update difficulty display when slider changes
+        document.getElementById('difficulty').addEventListener('input', function(e) {
+            difficulty = parseInt(e.target.value);
+            document.getElementById('difficultyValue').textContent = difficulty;
+        });
+
+        let stockfish = new Worker('../js/stockfish.js');
+        
+        stockfish.onmessage = function(event) {
+            // Check if the message contains a bestmove
+            if (event.data.includes('bestmove')) {
+                const move = event.data.split(' ')[1];
+                // Convert the move to chess.js format and make it
+                game.move({
+                    from: move.substring(0, 2),
+                    to: move.substring(2, 4),
+                    promotion: move.length === 5 ? move[4] : undefined
+                });
+                board.position(game.fen());
+                
+                if (game.game_over()) {
+                    if (game.in_checkmate()) {
+                        alert(game.turn() === 'w' ? 'Black wins!' : 'White wins!');
+                    } else if (game.in_draw()) {
+                        alert('Game is a draw!');
+                    }
+                }
+            }
+        };
+
+        function makeAIMove() {
+            document.body.style.cursor = 'wait';
+            
+            // Set the skill level (0-20)
+            const skillLevel = Math.floor((difficulty * 2)); // Convert 1-10 scale to 1-20
+            stockfish.postMessage('setoption name Skill Level value ' + skillLevel);
+            
+            // Set position
+            stockfish.postMessage('position fen ' + game.fen());
+            
+            // Calculate the best move with appropriate depth
+            const searchDepth = Math.min(difficulty + 5, 15); // Adjust depth based on difficulty
+            stockfish.postMessage('go depth ' + searchDepth);
+        }
+
+        function onDragStart(source, piece, position, orientation) {
+            if (game.game_over()) return false;
+            if (piece.search(/^b/) !== -1) return false;
+        }
+
+        function onDrop(source, target) {
+            var move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (move === null) return 'snapback';
+
+            if (game.game_over()) {
+                if (game.in_checkmate()) {
+                    alert(game.turn() === 'w' ? 'Black wins!' : 'White wins!');
+                } else if (game.in_draw()) {
+                    alert('Game is a draw!');
+                }
+                return;
+            }
+
+            window.setTimeout(makeAIMove, 250);
+        }
+
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+
+        var config = {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd,
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        };
+
+        board = Chessboard('board', config);
+
+        $('#startBtn').on('click', function() {
+            game.reset();
+            board.start();
+        });
+
+        $('#undoBtn').on('click', function() {
+            game.undo();
+            game.undo();
+            board.position(game.fen());
+        });
+    </script>
+</body>
+</html>
