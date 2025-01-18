@@ -14,6 +14,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="lib/stockfish.js"></script>
     <link rel="stylesheet" href="./css/output.css">
+    <style>
+        /* Add these styles for highlighting squares */
+        .highlight-white {
+            box-shadow: inset 0 0 3px 3px yellow;
+        }
+        .highlight-black {
+            box-shadow: inset 0 0 3px 3px yellow;
+        }
+    </style>
 </head>
 <body>
     <nav class="bg-gray-800 p-4">
@@ -58,10 +67,11 @@
                 <div class="bg-gray-100 p-4 rounded-lg">
                     <h2 class="text-xl font-bold mb-4">Game Controls</h2>
                     <div class="space-y-4">
-                        <button id="startBtn" class="bg-blue-500 text-white px-4 py-2 rounded">Start New Game</button>
-                        <button id="undoBtn" class="bg-gray-500 text-white px-4 py-2 rounded">Undo Move</button>
-                        
-                        <!-- New difficulty control -->
+                        <div class="flex space-x-2">
+                            <button id="startBtn" class="bg-blue-500 text-white px-4 py-2 rounded">Start New Game</button>
+                            <button id="undoBtn" class="bg-gray-500 text-white px-4 py-2 rounded">Undo Move</button>
+                            <button id="flipBoardBtn" class="bg-purple-500 text-white px-4 py-2 rounded">Switch Sides</button>
+                        </div>
                         <div class="mt-4">
                             <label class="block text-sm font-medium text-gray-700">Engine Difficulty (1-20)</label>
                             <input type="range" id="difficultySlider" min="1" max="20" value="10" 
@@ -72,7 +82,6 @@
                                 <span>Master</span>
                             </div>
                         </div>
-
                         <div id="status" class="mt-4 font-bold"></div>
                         <div id="engineOutput" class="mt-4 font-mono text-sm"></div>
                     </div>
@@ -87,14 +96,57 @@
         var $status = $('#status');
         var $engineOutput = $('#engineOutput');
         var stockfish = new Worker('lib/stockfish.js');
+        var playerColor = 'w';
+        var whiteSquareGrey = '#a9a9a9';
+        var blackSquareGrey = '#696969';
 
         // Initialize Stockfish
         stockfish.postMessage('uci');
         stockfish.postMessage('isready');
 
+        function removeGreySquares () {
+            $('#board1 .square-55d63').css('background', '');
+        }
+
+        function greySquare (square) {
+            var $square = $('#board1 .square-' + square);
+
+            var background = whiteSquareGrey;
+            if ($square.hasClass('black-3c85d')) {
+                background = blackSquareGrey;
+            }
+
+            $square.css('background', background);
+        }
+
         function onDragStart (source, piece, position, orientation) {
             if (game.game_over()) return false;
-            if (piece.search(/^b/) !== -1) return false;
+            
+            // Only allow moving pieces of player's color
+            if (piece.search(playerColor === 'w' ? /^b/ : /^w/) !== -1) return false;
+        }
+
+        function onMouseoverSquare (square, piece) {
+            // Get list of possible moves for this square
+            var moves = game.moves({
+                square: square,
+                verbose: true
+            });
+
+            // Exit if there are no moves available for this square
+            if (moves.length === 0) return;
+
+            // Highlight the square they moused over
+            greySquare(square);
+
+            // Highlight the possible squares for this piece
+            for (var i = 0; i < moves.length; i++) {
+                greySquare(moves[i].to);
+            }
+        }
+
+        function onMouseoutSquare (square, piece) {
+            removeGreySquares();
         }
 
         function getStockfishMove() {
@@ -106,8 +158,6 @@
 
                 stockfish.onmessage = function(event) {
                     const message = event.data;
-                    
-                    // Update engine output display
                     $engineOutput.text(message);
 
                     if (message.includes('bestmove')) {
@@ -122,23 +172,28 @@
             if (game.game_over()) return;
 
             const move = await getStockfishMove();
-            
+        
             game.move({
                 from: move.slice(0, 2),
                 to: move.slice(2, 4),
                 promotion: move.length === 5 ? move[4] : undefined
             });
+
             board.position(game.fen());
             updateStatus();
         }
 
         function onDrop (source, target) {
+            removeGreySquares();
+
             var move = game.move({
                 from: source,
                 to: target,
                 promotion: 'q'
             });
+
             if (move === null) return 'snapback';
+
             updateStatus();
             window.setTimeout(makeStockfishMove, 250);
         }
@@ -169,22 +224,33 @@
             $status.html(status);
         }
 
+        function startNewGame() {
+            game = new Chess();
+            board.start();
+            updateStatus();
+            
+            if (playerColor === 'b') {
+                window.setTimeout(makeStockfishMove, 250);
+            }
+        }
+
         var config = {
             draggable: true,
             position: 'start',
             onDragStart: onDragStart,
             onDrop: onDrop,
-            onSnapEnd: onSnapEnd
+            onSnapEnd: onSnapEnd,
+            onMouseoverSquare: onMouseoverSquare,
+            onMouseoutSquare: onMouseoutSquare,
+            orientation: 'white'
         };
+        
         board = Chessboard('board1', config);
         updateStatus();
 
         // Event listeners
-        $('#startBtn').on('click', function() {
-            game = new Chess();
-            board.position('start');
-            updateStatus();
-        });
+        $('#startBtn').on('click', startNewGame);
+
         $('#undoBtn').on('click', function() {
             game.undo();
             game.undo();
@@ -192,10 +258,16 @@
             updateStatus();
         });
 
-        // Difficulty slider
+        $('#flipBoardBtn').on('click', function() {
+            playerColor = playerColor === 'w' ? 'b' : 'w';
+            board.orientation(playerColor === 'w' ? 'white' : 'black');
+            startNewGame();
+        });
+
         $('#difficultySlider').on('input', function() {
             $('#difficultyValue').text($(this).val());
         });
+
         function toggleMenu() {
             const mobileMenu = document.getElementById('mobile-menu');
             mobileMenu.classList.toggle('hidden');
