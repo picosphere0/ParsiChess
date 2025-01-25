@@ -13,6 +13,8 @@
     <script src="lib/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="lib/stockfish.js"></script>
+    <!-- PocketBase -->
+    <script src="https://unpkg.com/pocketbase@0.21.1/dist/pocketbase.umd.js"></script>
     <link rel="stylesheet" href="./css/output.css">
     <style>
         /* Add these styles for highlighting squares */
@@ -22,23 +24,41 @@
         .highlight-black {
             box-shadow: inset 0 0 3px 3px yellow;
         }
+        .tab-active {
+            background-color: var(--accent);
+            color: var(--text);
+        }
+        /* Add styles for the board container */
+        .board-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        /* Lighter background color for controls (20% lighter) */
+        .bg-background-light {
+            background-color: #1a191b;
+        }
+        /* Make the board responsive */
+        #board1 {
+            width: 100% !important;
+        }
     </style>
 </head>
-<body>
-    <nav class="bg-gray-800 p-4">
+<body class="bg-background min-h-screen">
+    <nav class="bg-secondary p-4">
         <div class="container mx-auto">
             <div class="flex justify-between items-center">
-                <div class="text-white text-2xl font-bold">
+                <div class="text-text text-2xl font-bold">
                     ParsiChess
                 </div>
 
                 <div class="hidden md:flex space-x-6">
-                    <a href="#" class="text-white hover:text-gray-300">Puzzles</a>
-                    <a href="#" class="text-white hover:text-gray-300">Games</a>
-                    <a href="#" class="text-white hover:text-gray-300">Review</a>
+                    <button onclick="switchTab('game')" class="text-text hover:text-primary tab-button" data-tab="game">بازی با کامپیوتر</button>
+                    <button onclick="switchTab('puzzles')" class="text-text hover:text-primary tab-button" data-tab="puzzles">پازل‌ها</button>
+                    <a href="#" class="text-text hover:text-primary">بررسی</a>
                 </div>
 
-                <button class="md:hidden text-white focus:outline-none" onclick="toggleMenu()">
+                <button class="md:hidden text-text focus:outline-none" onclick="toggleMenu()">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
@@ -47,43 +67,108 @@
 
             <div id="mobile-menu" class="hidden md:hidden mt-2">
                 <div class="flex flex-col space-y-3">
-                    <a href="#" class="text-white hover:text-gray-300 py-2">Puzzles</a>
-                    <a href="#" class="text-white hover:text-gray-300 py-2">Games</a>
-                    <a href="#" class="text-white hover:text-gray-300 py-2">Review</a>
+                    <button onclick="switchTab('game')" class="text-text hover:text-primary py-2 text-left tab-button" data-tab="game">بازی با کامپیوتر</button>
+                    <button onclick="switchTab('puzzles')" class="text-text hover:text-primary py-2 text-left tab-button" data-tab="puzzles">پازل‌ها</button>
+                    <a href="#" class="text-text hover:text-primary py-2">بررسی</a>
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="container mx-auto mt-8 p-4">
-        <div class="flex flex-col md:flex-row gap-8">
+        <div class="flex flex-col md:flex-row justify-center gap-8">
             <!-- Chess Board -->
-            <div class="flex-1">
-                <div id="board1" style="width: 400px"></div>
+            <div class="w-full md:w-[400px]">
+                <!-- Black's Material Count -->
+                <div class="board-container">
+                    <div id="blackMaterial" class="bg-secondary text-text p-3 rounded-t-lg mb-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold">کامپیوتر</span>
+                            <div class="flex items-center space-x-2">
+                                <span id="blackCaptured" class="font-mono"></span>
+                                <span id="blackAdvantage" class="font-bold"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="board1"></div>
+                    
+                    <!-- White's Material Count -->
+                    <div id="whiteMaterial" class="bg-secondary text-text p-3 rounded-b-lg mt-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold">بازیکن</span>
+                            <div class="flex items-center space-x-2">
+                                <span id="whiteCaptured" class="font-mono"></span>
+                                <span id="whiteAdvantage" class="font-bold"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Game Controls -->
-            <div class="flex-1">
-                <div class="bg-gray-100 p-4 rounded-lg">
-                    <h2 class="text-xl font-bold mb-4">Game Controls</h2>
+            <!-- Game/Puzzle Controls -->
+            <div class="md:w-[400px]">
+                <!-- Game Controls -->
+                <div id="gameControls" class="tab-content bg-background-light text-text p-4 rounded-lg border border-secondary">
+                    <h2 class="text-xl font-bold mb-4">کنترل‌های بازی</h2>
                     <div class="space-y-4">
                         <div class="flex space-x-2">
-                            <button id="startBtn" class="bg-blue-500 text-white px-4 py-2 rounded">Start New Game</button>
-                            <button id="undoBtn" class="bg-gray-500 text-white px-4 py-2 rounded">Undo Move</button>
-                            <button id="flipBoardBtn" class="bg-purple-500 text-white px-4 py-2 rounded">Switch Sides</button>
+                            <button id="startBtn" class="bg-primary hover:bg-accent text-background px-4 py-2 rounded">بازی جدید</button>
+                            <button id="undoBtn" class="bg-secondary hover:bg-accent text-text px-4 py-2 rounded">برگشت حرکت</button>
+                            <button id="flipBoardBtn" class="bg-accent hover:bg-primary text-background px-4 py-2 rounded">تغییر طرف</button>
                         </div>
                         <div class="mt-4">
-                            <label class="block text-sm font-medium text-gray-700">Engine Difficulty (1-20)</label>
+                            <label class="block text-sm font-medium text-text">سطح موتور (۱-۲۰)</label>
                             <input type="range" id="difficultySlider" min="1" max="20" value="10" 
-                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            <div class="flex justify-between text-sm text-gray-600">
-                                <span>Beginner</span>
-                                <span id="difficultyValue">10</span>
-                                <span>Master</span>
+                                class="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-sm text-primary">
+                                <span>مبتدی</span>
+                                <span id="difficultyValue">۱۰</span>
+                                <span>استاد</span>
                             </div>
                         </div>
                         <div id="status" class="mt-4 font-bold"></div>
                         <div id="engineOutput" class="mt-4 font-mono text-sm"></div>
+                    </div>
+                </div>
+
+                <!-- Puzzle Controls -->
+                <div id="puzzleControls" class="tab-content hidden bg-background-light text-text p-4 rounded-lg border border-secondary">
+                    <h2 class="text-xl font-bold mb-4">کنترل‌های پازل</h2>
+                    <div class="space-y-4">
+                        <!-- Difficulty Selection -->
+                        <div class="mb-4">
+                            <h3 class="text-lg font-semibold mb-2">انتخاب سطح</h3>
+                            <div class="flex space-x-4">
+                                <button onclick="selectPuzzleLevel(1)" class="flex-1 bg-primary hover:bg-accent text-background px-6 py-3 rounded-lg text-lg font-bold shadow-lg transform hover:scale-105 transition-all">
+                                    <div>سطح ۱</div>
+                                    <div class="text-sm">مبتدی</div>
+                                </button>
+                                <button onclick="selectPuzzleLevel(2)" class="flex-1 bg-secondary hover:bg-accent text-text px-6 py-3 rounded-lg text-lg font-bold shadow-lg transform hover:scale-105 transition-all">
+                                    <div>سطح ۲</div>
+                                    <div class="text-sm">متوسط</div>
+                                </button>
+                                <button onclick="selectPuzzleLevel(3)" class="flex-1 bg-accent hover:bg-primary text-background px-6 py-3 rounded-lg text-lg font-bold shadow-lg transform hover:scale-105 transition-all">
+                                    <div>سطح ۳</div>
+                                    <div class="text-sm">پیشرفته</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Puzzle Navigation -->
+                        <div class="flex space-x-2">
+                            <button id="nextPuzzleBtn" class="flex-1 bg-primary hover:bg-accent text-background px-4 py-2 rounded-lg font-bold">پازل بعدی</button>
+                            <button id="resetPuzzleBtn" class="flex-1 bg-secondary hover:bg-accent text-text px-4 py-2 rounded-lg font-bold">شروع مجدد</button>
+                            <button id="revealAnswerBtn" class="flex-1 bg-accent hover:bg-primary text-background px-4 py-2 rounded-lg font-bold">نمایش جواب</button>
+                        </div>
+
+                        <!-- Status and Info -->
+                        <div id="puzzleInfo" class="mt-4">
+                            <p class="font-semibold">سطح فعلی: <span id="currentLevel">۱</span></p>
+                            <p class="font-semibold">پازل‌های حل شده: <span id="puzzlesSolved">۰</span></p>
+                        </div>
+                        <div id="puzzleStatus" class="mt-4 font-bold"></div>
+                        <div id="puzzleMessage" class="mt-4 text-lg font-bold"></div>
                     </div>
                 </div>
             </div>
@@ -91,6 +176,10 @@
     </div>
 
     <script>
+        // PocketBase initialization
+        const pb = new PocketBase('https://parsichess.pockethost.io');
+        
+        // Game variables
         var board = null;
         var game = new Chess();
         var $status = $('#status');
@@ -100,9 +189,25 @@
         var whiteSquareGrey = '#a9a9a9';
         var blackSquareGrey = '#696969';
 
+        // Puzzle variables
+        let currentPuzzle = null;
+        let currentPuzzleLevel = 1;
+        let puzzlesSolved = 0;
+        let isPuzzleMode = false;
+
         // Initialize Stockfish
         stockfish.postMessage('uci');
         stockfish.postMessage('isready');
+
+        // Piece values for material counting
+        const pieceValues = {
+            p: 1,    // pawn
+            n: 3,    // knight
+            b: 3,    // bishop
+            r: 5,    // rook
+            q: 9,    // queen
+            k: 0     // king (not counted in material advantage)
+        };
 
         function removeGreySquares () {
             $('#board1 .square-55d63').css('background', '');
@@ -120,26 +225,30 @@
         }
 
         function onDragStart (source, piece, position, orientation) {
-            if (game.game_over()) return false;
-            
-            // Only allow moving pieces of player's color
-            if (piece.search(playerColor === 'w' ? /^b/ : /^w/) !== -1) return false;
+            if (isPuzzleMode) {
+                if (game.game_over()) return false;
+                // Only allow moves for the current turn's color
+                if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                    (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                    return false;
+                }
+            } else {
+                if (game.game_over()) return false;
+                // Only allow moving pieces of player's color
+                if (piece.search(playerColor === 'w' ? /^b/ : /^w/) !== -1) return false;
+            }
         }
 
         function onMouseoverSquare (square, piece) {
-            // Get list of possible moves for this square
             var moves = game.moves({
                 square: square,
                 verbose: true
             });
 
-            // Exit if there are no moves available for this square
             if (moves.length === 0) return;
 
-            // Highlight the square they moused over
             greySquare(square);
 
-            // Highlight the possible squares for this piece
             for (var i = 0; i < moves.length; i++) {
                 greySquare(moves[i].to);
             }
@@ -147,6 +256,39 @@
 
         function onMouseoutSquare (square, piece) {
             removeGreySquares();
+        }
+
+        async function loadPuzzle() {
+            try {
+                // Fetch a random puzzle for the current level
+                const puzzles = await pb.collection('puzzles').getList(1, 1, {
+                    filter: `level = ${currentPuzzleLevel}`,
+                    sort: '@random'
+                });
+
+                if (puzzles.items.length > 0) {
+                    currentPuzzle = puzzles.items[0];
+                    game = new Chess(currentPuzzle.fen);
+                    board.position(game.fen());
+                    updateStatus();
+                    $('#puzzleMessage').text("بهترین حرکت را پیدا کنید!");
+
+                    // Prevent scrolling on mobile when moving pieces
+                    const boardElement = document.getElementById('board1');
+                    boardElement.addEventListener('touchmove', function(e) {
+                        e.preventDefault();
+                    }, { passive: false });
+                }
+            } catch (error) {
+                console.error('Error loading puzzle:', error);
+                $('#puzzleMessage').text("خطا در بارگذاری پازل. لطفا دوباره تلاش کنید.");
+            }
+        }
+
+        function selectPuzzleLevel(level) {
+            currentPuzzleLevel = level;
+            $('#currentLevel').text(level);
+            loadPuzzle();
         }
 
         function getStockfishMove() {
@@ -168,8 +310,90 @@
             });
         }
 
+        function updateMaterialCount() {
+            if (isPuzzleMode) return;  // Don't show material count in puzzle mode
+            
+            let position = game.board();
+            let whiteMaterial = { p: 0, n: 0, b: 0, r: 0, q: 0 };
+            let blackMaterial = { p: 0, n: 0, b: 0, r: 0, q: 0 };
+            let whiteCaptured = { p: 8, n: 2, b: 2, r: 2, q: 1 };
+            let blackCaptured = { p: 8, n: 2, b: 2, r: 2, q: 1 };
+
+            // Count pieces on the board
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    let piece = position[row][col];
+                    if (piece) {
+                        if (piece.color === 'w') {
+                            whiteMaterial[piece.type]++;
+                        } else {
+                            blackMaterial[piece.type]++;
+                        }
+                    }
+                }
+            }
+
+            // Calculate captured pieces
+            for (let piece in whiteMaterial) {
+                whiteCaptured[piece] -= whiteMaterial[piece];
+                blackCaptured[piece] -= blackMaterial[piece];
+            }
+
+            // Calculate material advantage
+            let whiteTotal = Object.keys(whiteMaterial).reduce((sum, piece) => 
+                sum + whiteMaterial[piece] * pieceValues[piece], 0);
+            let blackTotal = Object.keys(blackMaterial).reduce((sum, piece) => 
+                sum + blackMaterial[piece] * pieceValues[piece], 0);
+            let advantage = whiteTotal - blackTotal;
+
+            // Update the display
+            function formatCaptured(captured) {
+                let display = '';
+                let total = 0;
+                if (captured.q > 0) {
+                    display += `♛${captured.q} `;
+                    total += captured.q * pieceValues.q;
+                }
+                if (captured.r > 0) {
+                    display += `♜${captured.r} `;
+                    total += captured.r * pieceValues.r;
+                }
+                if (captured.b > 0) {
+                    display += `♝${captured.b} `;
+                    total += captured.b * pieceValues.b;
+                }
+                if (captured.n > 0) {
+                    display += `♞${captured.n} `;
+                    total += captured.n * pieceValues.n;
+                }
+                if (captured.p > 0) {
+                    display += `♟${captured.p} `;
+                    total += captured.p * pieceValues.p;
+                }
+                return { display, total };
+            }
+
+            const whiteCapturedInfo = formatCaptured(blackCaptured);  // Black pieces captured by white
+            const blackCapturedInfo = formatCaptured(whiteCaptured);  // White pieces captured by black
+
+            $('#whiteCaptured').html(`<span class="mr-2">${whiteCapturedInfo.display}</span>${whiteCapturedInfo.total > 0 ? `<span class="text-sm">(${whiteCapturedInfo.total})</span>` : ''}`);
+            $('#blackCaptured').html(`<span class="mr-2">${blackCapturedInfo.display}</span>${blackCapturedInfo.total > 0 ? `<span class="text-sm">(${blackCapturedInfo.total})</span>` : ''}`);
+
+            // Display advantage
+            if (advantage > 0) {
+                $('#whiteAdvantage').text(`+${advantage}`).removeClass('text-red-500').addClass('text-green-500');
+                $('#blackAdvantage').text('').removeClass('text-red-500').addClass('text-green-500');
+            } else if (advantage < 0) {
+                $('#blackAdvantage').text(`+${-advantage}`).removeClass('text-red-500').addClass('text-green-500');
+                $('#whiteAdvantage').text('').removeClass('text-green-500').addClass('text-red-500');
+            } else {
+                $('#whiteAdvantage').text('');
+                $('#blackAdvantage').text('');
+            }
+        }
+
         async function makeStockfishMove() {
-            if (game.game_over()) return;
+            if (game.game_over() || isPuzzleMode) return;
 
             const move = await getStockfishMove();
         
@@ -181,6 +405,7 @@
 
             board.position(game.fen());
             updateStatus();
+            updateMaterialCount();
         }
 
         function onDrop (source, target) {
@@ -194,8 +419,24 @@
 
             if (move === null) return 'snapback';
 
+            if (isPuzzleMode) {
+                // Check if the move matches the solution
+                if (currentPuzzle && move.san === currentPuzzle.solution) {
+                    $('#puzzleMessage').text("آفرین! درست بود!");
+                    puzzlesSolved++;
+                    $('#puzzlesSolved').text(toPersianNumbers(puzzlesSolved));
+                } else {
+                    $('#puzzleMessage').text("اشتباه است. دوباره تلاش کنید!");
+                    game.undo();
+                    return 'snapback';
+                }
+            } else {
+                updateStatus();
+                updateMaterialCount();
+                window.setTimeout(makeStockfishMove, 250);
+            }
+
             updateStatus();
-            window.setTimeout(makeStockfishMove, 250);
         }
 
         function onSnapEnd () {
@@ -204,33 +445,58 @@
 
         function updateStatus () {
             var status = '';
-            var moveColor = 'White';
-
-            if (game.turn() === 'b') {
-                moveColor = 'Black';
-            }
+            var moveColor = game.turn() === 'b' ? 'سیاه' : 'سفید';
 
             if (game.in_checkmate()) {
-                status = 'Game over, ' + moveColor + ' is in checkmate.';
+                status = 'پایان بازی، ' + moveColor + ' مات شد';
             } else if (game.in_draw()) {
-                status = 'Game over, drawn position';
+                status = 'پایان بازی، مساوی';
             } else {
-                status = moveColor + ' to move';
+                status = 'نوبت ' + moveColor;
                 if (game.in_check()) {
-                    status += ', ' + moveColor + ' is in check';
+                    status += '، ' + moveColor + ' کیش است';
                 }
             }
 
-            $status.html(status);
+            if (isPuzzleMode) {
+                $('#puzzleStatus').html(status);
+            } else {
+                $status.html(status);
+            }
         }
 
         function startNewGame() {
             game = new Chess();
             board.start();
             updateStatus();
+            updateMaterialCount();
+            
+            // Prevent scrolling on mobile when moving pieces
+            const boardElement = document.getElementById('board1');
+            boardElement.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, { passive: false });
             
             if (playerColor === 'b') {
                 window.setTimeout(makeStockfishMove, 250);
+            }
+        }
+
+        function switchTab(tab) {
+            // Update tab buttons
+            $('.tab-button').removeClass('tab-active');
+            $(`.tab-button[data-tab="${tab}"]`).addClass('tab-active');
+
+            // Show/hide content
+            $('.tab-content').addClass('hidden');
+            if (tab === 'game') {
+                $('#gameControls').removeClass('hidden');
+                isPuzzleMode = false;
+                startNewGame();
+            } else if (tab === 'puzzles') {
+                $('#puzzleControls').removeClass('hidden');
+                isPuzzleMode = true;
+                loadPuzzle();
             }
         }
 
@@ -252,26 +518,66 @@
         $('#startBtn').on('click', startNewGame);
 
         $('#undoBtn').on('click', function() {
-            game.undo();
-            game.undo();
-            board.position(game.fen());
-            updateStatus();
+            if (!isPuzzleMode) {
+                game.undo();
+                game.undo();
+                board.position(game.fen());
+                updateStatus();
+                updateMaterialCount();
+            }
         });
 
         $('#flipBoardBtn').on('click', function() {
-            playerColor = playerColor === 'w' ? 'b' : 'w';
-            board.orientation(playerColor === 'w' ? 'white' : 'black');
-            startNewGame();
+            if (!isPuzzleMode) {
+                playerColor = playerColor === 'w' ? 'b' : 'w';
+                board.orientation(playerColor === 'w' ? 'white' : 'black');
+                startNewGame();
+            }
         });
 
         $('#difficultySlider').on('input', function() {
-            $('#difficultyValue').text($(this).val());
+            $('#difficultyValue').text(toPersianNumbers($(this).val()));
+        });
+
+        $('#nextPuzzleBtn').on('click', loadPuzzle);
+        
+        $('#resetPuzzleBtn').on('click', function() {
+            if (currentPuzzle) {
+                game = new Chess(currentPuzzle.fen);
+                board.position(game.fen());
+                updateStatus();
+                $('#puzzleMessage').text("بهترین حرکت را پیدا کنید!");
+            }
+        });
+
+        $('#revealAnswerBtn').on('click', function() {
+            if (currentPuzzle) {
+                $('#puzzleMessage').html(`حرکت صحیح: <span class="font-bold text-purple-600">${currentPuzzle.solution}</span>`);
+                if (currentPuzzle.description) {
+                    $('#puzzleMessage').append(`<br><span class="text-sm text-gray-600 mt-2 block">${currentPuzzle.description}</span>`);
+                }
+            }
         });
 
         function toggleMenu() {
             const mobileMenu = document.getElementById('mobile-menu');
             mobileMenu.classList.toggle('hidden');
         }
+
+        // Initialize with game mode
+        switchTab('game');
+
+        // Add a helper function to convert numbers to Persian
+        function toPersianNumbers(num) {
+            const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+            return num.toString().split('').map(c => persianNumbers[c] || c).join('');
+        }
+
+        // Initialize with Persian numbers
+        $('#currentLevel').text('۱');
+        $('#puzzlesSolved').text('۰');
+        $('#difficultyValue').text('۱۰');
     </script>
+
 </body>
 </html>
