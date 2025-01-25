@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>parsiChess || Dashboard</title>
     <!-- jQuery with integrity check -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js" 
@@ -17,48 +17,212 @@
     <script src="https://unpkg.com/pocketbase@0.21.1/dist/pocketbase.umd.js"></script>
     <link rel="stylesheet" href="./css/output.css">
     <style>
-        /* Add these styles for highlighting squares */
+        /* Add these at the top of your style section */
+        html, body {
+            overflow-x: hidden;
+            position: relative;
+            width: 100%;
+        }
+
+        /* Update container styles */
+        .container {
+            max-width: 100%;
+            overflow-x: hidden;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        /* Update flex direction for RTL */
+        .flex {
+            flex-direction: row-reverse;
+        }
+
+        /* Update space utilities for RTL */
+        .space-x-6 > * + * {
+            margin-right: 1.5rem;
+            margin-left: 0;
+        }
+
+        .space-x-4 > * + * {
+            margin-right: 1rem;
+            margin-left: 0;
+        }
+
+        .space-x-2 > * + * {
+            margin-right: 0.5rem;
+            margin-left: 0;
+        }
+
+        /* Glass effect and modern UI styles */
+        .glass-effect {
+            background: rgba(26, 25, 27, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(241, 240, 244, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        
+        .glass-button {
+            background: rgba(175, 173, 193, 0.1);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(241, 240, 244, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-button:hover {
+            background: rgba(147, 113, 115, 0.2);
+            transform: translateY(-2px);
+        }
+
         .highlight-white {
-            box-shadow: inset 0 0 3px 3px yellow;
+            box-shadow: inset 0 0 3px 3px rgba(175, 173, 193, 0.5);
         }
+        
         .highlight-black {
-            box-shadow: inset 0 0 3px 3px yellow;
+            box-shadow: inset 0 0 3px 3px rgba(175, 173, 193, 0.5);
         }
+        
         .tab-active {
-            background-color: var(--accent);
-            color: var(--text);
+            background: rgba(147, 113, 115, 0.2);
+            border: 1px solid rgba(241, 240, 244, 0.2);
         }
-        /* Add styles for the board container */
+
         .board-container {
             width: 100%;
             max-width: 400px;
             margin: 0 auto;
         }
-        /* Lighter background color for controls (20% lighter) */
-        .bg-background-light {
-            background-color: #1a191b;
-        }
-        /* Make the board responsive */
+
         #board1 {
             width: 100% !important;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        /* Custom slider styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 8px;
+            background: linear-gradient(to right, var(--primary) 0%, var(--primary) 50%, rgba(97, 74, 88, 0.3) 50%, rgba(97, 74, 88, 0.3) 100%);
+            border-radius: 8px;
+            background-size: 70% 100%;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            border: 2px solid var(--text);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+        }
+
+        input[type="range"]:focus {
+            outline: none;
+        }
+
+        @media (max-width: 768px) {
+            .board-container {
+                width: 97%;
+                max-width: 400px;
+            }
+
+            /* Mobile-specific layout */
+            .container {
+                display: flex;
+                flex-direction: column;
+                min-height: calc(100vh - 56px); /* Reduced from 70px to match smaller nav */
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+
+            /* Mobile nav styles */
+            nav.glass-effect {
+                padding: 0.5rem;
+            }
+
+            nav .text-2xl {
+                font-size: 1.25rem;
+            }
+
+            #mobile-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(26, 25, 27, 0.95);
+                backdrop-filter: blur(10px);
+                border-top: 1px solid rgba(241, 240, 244, 0.1);
+                padding: 0.5rem;
+            }
+
+            #mobile-menu button, 
+            #mobile-menu a {
+                width: 100%;
+                text-align: center;
+                padding: 0.5rem;
+            }
+
+            .flex-col.md\:flex-row {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+            }
+
+            /* Push controls to bottom */
+            .md\:w-\[400px\] {
+                width: 100%;
+                margin-top: auto;
+            }
+
+            /* Adjust spacing for mobile */
+            .mt-12 {
+                margin-top: 1rem;
+            }
+
+            .p-10 {
+                padding: 1.5rem;
+            }
+
+            .gap-12 {
+                gap: 1rem;
+            }
+        }
+
+        /* Grid background effect */
+        .grid-background {
+            background-image: 
+                linear-gradient(rgba(147, 113, 115, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(147, 113, 115, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: center center;
         }
     </style>
 </head>
-<body class="bg-background min-h-screen">
-    <nav class="bg-secondary p-4">
-        <div class="container mx-auto">
+<body class="bg-background min-h-screen grid-background">
+    <nav class="glass-effect sticky top-0 z-50 px-4 py-3">
+        <div >
             <div class="flex justify-between items-center">
-                <div class="text-text text-2xl font-bold">
+                <div class="text-text text-2xl font-bold tracking-wider">
                     ParsiChess
                 </div>
 
                 <div class="hidden md:flex space-x-6">
-                    <button onclick="switchTab('game')" class="text-text hover:text-primary tab-button" data-tab="game">بازی با کامپیوتر</button>
-                    <button onclick="switchTab('puzzles')" class="text-text hover:text-primary tab-button" data-tab="puzzles">پازل‌ها</button>
-                    <a href="#" class="text-text hover:text-primary">بررسی</a>
+                    <button onclick="switchTab('game')" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary tab-button" data-tab="game">بازی با کامپیوتر</button>
+                    <button onclick="switchTab('puzzles')" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary tab-button" data-tab="puzzles">پازل‌ها</button>
+                    <a href="#" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary">بررسی</a>
                 </div>
 
-                <button class="md:hidden text-text focus:outline-none" onclick="toggleMenu()">
+                <button class="md:hidden text-text focus:outline-none glass-button p-2 rounded-lg" onclick="toggleMenu()">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
@@ -67,38 +231,36 @@
 
             <div id="mobile-menu" class="hidden md:hidden mt-2">
                 <div class="flex flex-col space-y-3">
-                    <button onclick="switchTab('game')" class="text-text hover:text-primary py-2 text-left tab-button" data-tab="game">بازی با کامپیوتر</button>
-                    <button onclick="switchTab('puzzles')" class="text-text hover:text-primary py-2 text-left tab-button" data-tab="puzzles">پازل‌ها</button>
-                    <a href="#" class="text-text hover:text-primary py-2">بررسی</a>
+                    <button onclick="switchTab('game')" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary tab-button" data-tab="game">بازی با کامپیوتر</button>
+                    <button onclick="switchTab('puzzles')" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary tab-button" data-tab="puzzles">پازل‌ها</button>
+                    <a href="#" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary">بررسی</a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto mt-8 p-4">
-        <div class="flex flex-col md:flex-row justify-center gap-8">
+    <div class="container mx-auto mt-12 p-6">
+        <div class="flex flex-col md:flex-row justify-center gap-12">
             <!-- Chess Board -->
             <div class="w-full md:w-[400px]">
-                <!-- Black's Material Count -->
                 <div class="board-container">
-                    <div id="blackMaterial" class="bg-secondary text-text p-3 rounded-t-lg mb-1">
+                    <div id="blackMaterial" class="glass-effect p-3 rounded-t-lg mb-1">
                         <div class="flex justify-between items-center">
-                            <span class="font-bold">کامپیوتر</span>
+                            <span class="font-bold text-text">کامپیوتر</span>
                             <div class="flex items-center space-x-2">
-                                <span id="blackCaptured" class="font-mono"></span>
+                                <span id="blackCaptured" class="font-mono text-text"></span>
                                 <span id="blackAdvantage" class="font-bold"></span>
                             </div>
                         </div>
                     </div>
                     
-                    <div id="board1"></div>
+                    <div id="board1" class="rounded-lg"></div>
                     
-                    <!-- White's Material Count -->
-                    <div id="whiteMaterial" class="bg-secondary text-text p-3 rounded-b-lg mt-1">
+                    <div id="whiteMaterial" class="glass-effect p-3 rounded-b-lg mt-1">
                         <div class="flex justify-between items-center">
-                            <span class="font-bold">بازیکن</span>
+                            <span class="font-bold text-text">بازیکن</span>
                             <div class="flex items-center space-x-2">
-                                <span id="whiteCaptured" class="font-mono"></span>
+                                <span id="whiteCaptured" class="font-mono text-text"></span>
                                 <span id="whiteAdvantage" class="font-bold"></span>
                             </div>
                         </div>
@@ -109,66 +271,66 @@
             <!-- Game/Puzzle Controls -->
             <div class="md:w-[400px]">
                 <!-- Game Controls -->
-                <div id="gameControls" class="tab-content bg-background-light text-text p-4 rounded-lg border border-secondary">
-                    <h2 class="text-xl font-bold mb-4">کنترل‌های بازی</h2>
-                    <div class="space-y-4">
-                        <div class="flex space-x-2">
-                            <button id="startBtn" class="bg-primary hover:bg-accent text-background px-4 py-2 rounded">بازی جدید</button>
-                            <button id="undoBtn" class="bg-secondary hover:bg-accent text-text px-4 py-2 rounded">برگشت حرکت</button>
-                            <button id="flipBoardBtn" class="bg-accent hover:bg-primary text-background px-4 py-2 rounded">تغییر طرف</button>
+                <div id="gameControls" class="tab-content glass-effect p-10 rounded-lg">
+                    <h2 class="text-xl font-bold mb-10 text-text">کنترل‌های بازی</h2>
+                    <div class="space-y-10">
+                        <div class="flex gap-4">
+                            <button id="startBtn" class="glass-button flex-1 px-6 py-5 rounded-lg text-text hover:text-primary">بازی جدید</button>
+                            <button id="undoBtn" class="glass-button flex-1 px-6 py-5 rounded-lg text-text hover:text-primary">برگشت حرکت</button>
+                            <button id="flipBoardBtn" class="glass-button flex-1 px-6 py-5 rounded-lg text-text hover:text-primary">تغییر طرف</button>
                         </div>
-                        <div class="mt-4">
-                            <label class="block text-sm font-medium text-text">سطح موتور (۱-۲۰)</label>
+                        <div class="mt-10">
+                            <label class="block text-sm font-medium text-text mb-5">سطح موتور (۱-۲۰)</label>
                             <input type="range" id="difficultySlider" min="1" max="20" value="10" 
-                                class="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer">
-                            <div class="flex justify-between text-sm text-primary">
+                                class="w-full cursor-pointer">
+                            <div class="flex justify-between text-sm text-primary mt-4">
                                 <span>مبتدی</span>
-                                <span id="difficultyValue">۱۰</span>
+                                <span id="difficultyValue" class="text-accent">۱۰</span>
                                 <span>استاد</span>
                             </div>
                         </div>
-                        <div id="status" class="mt-4 font-bold"></div>
-                        <div id="engineOutput" class="mt-4 font-mono text-sm"></div>
+                        <div id="status" class="mt-8 font-bold text-text"></div>
+                        <div id="engineOutput" class="mt-8 font-mono text-sm text-primary"></div>
                     </div>
                 </div>
 
                 <!-- Puzzle Controls -->
-                <div id="puzzleControls" class="tab-content hidden bg-background-light text-text p-4 rounded-lg border border-secondary">
-                    <h2 class="text-xl font-bold mb-4">کنترل‌های پازل</h2>
-                    <div class="space-y-4">
+                <div id="puzzleControls" class="tab-content hidden glass-effect p-10 rounded-lg">
+                    <h2 class="text-xl font-bold mb-10 text-text">کنترل‌های پازل</h2>
+                    <div class="space-y-10">
                         <!-- Difficulty Selection -->
-                        <div class="mb-4">
-                            <h3 class="text-lg font-semibold mb-2">انتخاب سطح</h3>
-                            <div class="flex space-x-4">
-                                <button onclick="selectPuzzleLevel(1)" class="flex-1 bg-primary hover:bg-accent text-background px-6 py-3 rounded-lg text-lg font-bold shadow-lg transform hover:scale-105 transition-all">
-                                    <div>سطح ۱</div>
-                                    <div class="text-sm">مبتدی</div>
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold mb-6 text-text">انتخاب سطح</h3>
+                            <div class="flex gap-4">
+                                <button onclick="selectPuzzleLevel(1)" class="glass-button flex-1 px-6 py-5 rounded-lg text-text hover:text-primary transform hover:scale-105 transition-all">
+                                    <div class="text-lg font-bold">سطح ۱</div>
+                                    <div class="text-sm opacity-75 mt-2">مبتدی</div>
                                 </button>
-                                <button onclick="selectPuzzleLevel(2)" class="flex-1 bg-secondary hover:bg-accent text-text px-6 py-3 rounded-lg text-lg font-bold shadow-lg transform hover:scale-105 transition-all">
-                                    <div>سطح ۲</div>
-                                    <div class="text-sm">متوسط</div>
+                                <button onclick="selectPuzzleLevel(2)" class="glass-button flex-1 px-6 py-5 rounded-lg text-text hover:text-primary transform hover:scale-105 transition-all">
+                                    <div class="text-lg font-bold">سطح ۲</div>
+                                    <div class="text-sm opacity-75 mt-2">متوسط</div>
                                 </button>
-                                <button onclick="selectPuzzleLevel(3)" class="flex-1 bg-accent hover:bg-primary text-background px-6 py-3 rounded-lg text-lg font-bold shadow-lg transform hover:scale-105 transition-all">
-                                    <div>سطح ۳</div>
-                                    <div class="text-sm">پیشرفته</div>
+                                <button onclick="selectPuzzleLevel(3)" class="glass-button flex-1 px-6 py-5 rounded-lg text-text hover:text-primary transform hover:scale-105 transition-all">
+                                    <div class="text-lg font-bold">سطح ۳</div>
+                                    <div class="text-sm opacity-75 mt-2">پیشرفته</div>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Puzzle Navigation -->
-                        <div class="flex space-x-2">
-                            <button id="nextPuzzleBtn" class="flex-1 bg-primary hover:bg-accent text-background px-4 py-2 rounded-lg font-bold">پازل بعدی</button>
-                            <button id="resetPuzzleBtn" class="flex-1 bg-secondary hover:bg-accent text-text px-4 py-2 rounded-lg font-bold">شروع مجدد</button>
-                            <button id="revealAnswerBtn" class="flex-1 bg-accent hover:bg-primary text-background px-4 py-2 rounded-lg font-bold">نمایش جواب</button>
+                        <div class="flex gap-4">
+                            <button id="nextPuzzleBtn" class="glass-button flex-1 px-6 py-5 rounded-lg text-text hover:text-primary">پازل بعدی</button>
+                            <button id="resetPuzzleBtn" class="glass-button flex-1 px-6 py-5 rounded-lg text-text hover:text-primary">شروع مجدد</button>
+                            <button id="revealAnswerBtn" class="glass-button flex-1 px-6 py-5 rounded-lg text-text hover:text-primary">نمایش جواب</button>
                         </div>
 
                         <!-- Status and Info -->
-                        <div id="puzzleInfo" class="mt-4">
-                            <p class="font-semibold">سطح فعلی: <span id="currentLevel">۱</span></p>
-                            <p class="font-semibold">پازل‌های حل شده: <span id="puzzlesSolved">۰</span></p>
+                        <div id="puzzleInfo" class="mt-8 space-y-3">
+                            <p class="font-semibold text-text">سطح فعلی: <span id="currentLevel" class="text-accent">۱</span></p>
+                            <p class="font-semibold text-text">پازل‌های حل شده: <span id="puzzlesSolved" class="text-accent">۰</span></p>
                         </div>
-                        <div id="puzzleStatus" class="mt-4 font-bold"></div>
-                        <div id="puzzleMessage" class="mt-4 text-lg font-bold"></div>
+                        <div id="puzzleStatus" class="mt-6 font-bold text-text"></div>
+                        <div id="puzzleMessage" class="mt-6 text-lg font-bold text-text"></div>
                     </div>
                 </div>
             </div>
@@ -536,7 +698,10 @@
         });
 
         $('#difficultySlider').on('input', function() {
-            $('#difficultyValue').text(toPersianNumbers($(this).val()));
+            const value = $(this).val();
+            const percentage = ((value - 1) / 19) * 100; // Convert value to percentage (1-20 range)
+            $(this).css('background', `linear-gradient(to right, var(--primary) 0%, var(--primary) ${percentage}%, rgba(97, 74, 88, 0.3) ${percentage}%, rgba(97, 74, 88, 0.3) 100%)`);
+            $('#difficultyValue').text(toPersianNumbers(value));
         });
 
         $('#nextPuzzleBtn').on('click', loadPuzzle);
