@@ -214,6 +214,63 @@
             background-size: 20px 20px;
             background-position: center center;
         }
+
+        /* Video section styles */
+        .video-card {
+            position: relative;
+            background: rgba(26, 25, 27, 0.5);
+            border: 1px solid rgba(241, 240, 244, 0.1);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            padding: 1rem;
+            cursor: pointer;
+        }
+
+        .video-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            background: rgba(26, 25, 27, 0.7);
+        }
+
+        .video-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .video-description {
+            font-size: 0.875rem;
+            color: var(--primary);
+            opacity: 0.8;
+        }
+
+        .video-player-container {
+            display: none;
+            margin-top: 1rem;
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .video-player-container.active {
+            display: block;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000;
+        }
+
+        @media (max-width: 768px) {
+            .video-card {
+                margin-bottom: 1rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-background min-h-screen grid-background">
@@ -227,7 +284,6 @@
                 <div class="hidden md:flex space-x-6">
                     <button onclick="switchTab('game')" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary tab-button" data-tab="game">بازی با کامپیوتر</button>
                     <button onclick="switchTab('puzzles')" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary tab-button" data-tab="puzzles">پازل‌ها</button>
-                    <a href="#" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary">بررسی</a>
                 </div>
 
                 <button class="md:hidden text-text focus:outline-none glass-button p-2 rounded-lg" onclick="toggleMenu()">
@@ -241,7 +297,6 @@
                 <div class="flex flex-col space-y-3">
                     <button onclick="switchTab('game')" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary tab-button" data-tab="game">بازی با کامپیوتر</button>
                     <button onclick="switchTab('puzzles')" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary tab-button" data-tab="puzzles">پازل‌ها</button>
-                    <a href="#" class="glass-button px-4 py-2 rounded-lg text-text hover:text-primary">بررسی</a>
                 </div>
             </div>
         </div>
@@ -340,6 +395,37 @@
                         <div id="puzzleStatus" class="mt-6 font-bold text-text"></div>
                         <div id="puzzleMessage" class="mt-6 text-lg font-bold text-text"></div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Section -->
+    <div class="container mx-auto mt-16 p-6">
+        <h2 class="text-2xl font-bold mb-10 text-text text-center">ویدیوهای آموزشی</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Beginner Videos -->
+            <div class="glass-effect p-6 rounded-lg">
+                <h3 class="text-xl font-bold mb-6 text-text">مبتدی</h3>
+                <div id="beginnerVideos" class="space-y-4">
+                    <!-- Videos will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Intermediate Videos -->
+            <div class="glass-effect p-6 rounded-lg">
+                <h3 class="text-xl font-bold mb-6 text-text">متوسط</h3>
+                <div id="intermediateVideos" class="space-y-4">
+                    <!-- Videos will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Advanced Videos -->
+            <div class="glass-effect p-6 rounded-lg">
+                <h3 class="text-xl font-bold mb-6 text-text">پیشرفته</h3>
+                <div id="advancedVideos" class="space-y-4">
+                    <!-- Videos will be loaded here -->
                 </div>
             </div>
         </div>
@@ -750,6 +836,94 @@
         $('#currentLevel').text('۱');
         $('#puzzlesSolved').text('۰');
         $('#difficultyValue').text('۱۰');
+
+        // Video handling functions
+        async function loadVideos() {
+            try {
+                // Fetch videos from PocketBase
+                const beginnerVideos = await pb.collection('videos').getList(1, 5, {
+                    filter: 'level = "beginner"',
+                    sort: '-created'
+                });
+
+                const intermediateVideos = await pb.collection('videos').getList(1, 5, {
+                    filter: 'level = "intermediate"',
+                    sort: '-created'
+                });
+
+                const advancedVideos = await pb.collection('videos').getList(1, 5, {
+                    filter: 'level = "advanced"',
+                    sort: '-created'
+                });
+
+                // Display videos in their respective sections
+                displayVideos(beginnerVideos.items, 'beginnerVideos');
+                displayVideos(intermediateVideos.items, 'intermediateVideos');
+                displayVideos(advancedVideos.items, 'advancedVideos');
+            } catch (error) {
+                console.error('Error loading videos:', error);
+            }
+        }
+
+        function displayVideos(videos, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            videos.forEach(video => {
+                const videoCard = document.createElement('div');
+                videoCard.className = 'video-card';
+                
+                // Create the main content
+                const content = document.createElement('div');
+                content.innerHTML = `
+                    <h4 class="video-title">${video.title}</h4>
+                    <p class="video-description">${video.description}</p>
+                `;
+
+                // Create the video player container
+                const playerContainer = document.createElement('div');
+                playerContainer.className = 'video-player-container';
+                
+                // Get the video URL from PocketBase
+                const videoUrl = pb.files.getUrl(video, video.video_file);
+                playerContainer.innerHTML = `
+                    <video class="video-player" controls>
+                        <source src="${videoUrl}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                `;
+
+                // Add click handler
+                let isExpanded = false;
+                content.addEventListener('click', () => {
+                    if (!isExpanded) {
+                        // Close any other open videos in this container
+                        container.querySelectorAll('.video-player-container.active').forEach(player => {
+                            if (player !== playerContainer) {
+                                player.classList.remove('active');
+                                // Pause other videos
+                                player.querySelector('video').pause();
+                            }
+                        });
+                        // Open this video
+                        playerContainer.classList.add('active');
+                    } else {
+                        // Close this video
+                        playerContainer.classList.remove('active');
+                        // Pause the video when closing
+                        playerContainer.querySelector('video').pause();
+                    }
+                    isExpanded = !isExpanded;
+                });
+
+                videoCard.appendChild(content);
+                videoCard.appendChild(playerContainer);
+                container.appendChild(videoCard);
+            });
+        }
+
+        // Load videos when the page loads
+        loadVideos();
     </script>
 
 </body>
